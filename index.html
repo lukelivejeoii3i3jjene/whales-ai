@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Whales AI — Studying Made Simple</title>
+  <script src="https://tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 flex flex-col h-screen font-sans">
+  <header class="flex items-center justify-between px-4 py-3 bg-slate-900 border-b border-slate-800">
+    <div class="flex items-center gap-2">
+      <span class="text-2xl">🐋</span>
+      <div>
+        <h1 class="font-bold text-lg leading-none text-sky-400">Whales AI</h1>
+        <p class="text-[11px] text-slate-400">Class 1–12 Study Hub • By Arpit</p>
+      </div>
+    </div>
+    <button onclick="window.open('https://perchance.org' + '/ai-text-to-image-generator', '_blank')"
+       class="text-xs bg-indigo-600 hover:bg-indigo-500 px-3 py-1.5 rounded-full font-semibold">
+      🎨 Image Studio
+    </button>
+  </header>
+
+  <div class="flex gap-2 p-2.5 bg-slate-900/60 border-b border-slate-800 overflow-x-auto">
+    <button onclick="setMode('exam')" id="btn-exam" class="mode-btn bg-sky-500 text-slate-950 font-semibold text-xs px-3 py-1.5 rounded-full whitespace-nowrap">📚 Class 6–12 Exam</button>
+    <button onclick="setMode('junior')" id="btn-junior" class="mode-btn bg-slate-800 text-slate-300 font-semibold text-xs px-3 py-1.5 rounded-full whitespace-nowrap">🎈 Class 1–5 Fun</button>
+    <button onclick="setMode('code')" id="btn-code" class="mode-btn bg-slate-800 text-slate-300 font-semibold text-xs px-3 py-1.5 rounded-full whitespace-nowrap">💻 Code Helper</button>
+  </div>
+
+  <main id="chat" class="flex-1 overflow-y-auto p-4 space-y-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 max-w-xl">
+      <p class="text-sm text-sky-300 font-semibold mb-1">Welcome to Whales AI 🐋</p>
+      <p class="text-sm text-slate-300">Ask any homework question, request a 3-point chapter summary, or write code—free and zero confusion!</p>
+    </div>
+  </main>
+
+  <form onsubmit="sendMsg(event)" class="p-3 bg-slate-900 border-t border-slate-800 flex gap-2">
+    <input id="input" type="text" required placeholder="Ask Whales AI anything..."
+           class="flex-1 bg-slate-800 text-sm rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-sky-500" />
+    <button type="submit" class="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-5 py-3 rounded-xl text-sm">Send</button>
+  </form>
+
+  <script>
+    let currentMode = 'exam';
+    function setMode(m) {
+      currentMode = m;
+      document.querySelectorAll('.mode-btn').forEach(b => {
+        b.className = 'mode-btn bg-slate-800 text-slate-300 font-semibold text-xs px-3 py-1.5 rounded-full whitespace-nowrap';
+      });
+      document.getElementById('btn-' + m).className = 'mode-btn bg-sky-500 text-slate-950 font-semibold text-xs px-3 py-1.5 rounded-full whitespace-nowrap';
+    }
+
+    async function sendMsg(e) {
+      e.preventDefault();
+      const input = document.getElementById('input');
+      const chat = document.getElementById('chat');
+      const text = input.value.trim();
+      if (!text) return;
+
+      chat.innerHTML += `<div class="flex justify-end"><div class="bg-sky-500 text-slate-950 font-medium text-sm rounded-2xl px-4 py-2.5 max-w-xs">${text}</div></div>`;
+      input.value = '';
+      chat.scrollTop = chat.scrollHeight;
+
+      const loadingId = 'load-' + Date.now();
+      chat.innerHTML += `<div id="${loadingId}" class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 max-w-xl text-sm text-slate-400">Thinking... 🐋</div>`;
+      chat.scrollTop = chat.scrollHeight;
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text, mode: currentMode })
+        });
+        const data = await res.json();
+        document.getElementById(loadingId).innerText = data.reply || data.error;
+        document.getElementById(loadingId).classList.replace('text-slate-400', 'text-slate-100');
+      } catch {
+        document.getElementById(loadingId).innerText = 'Network error. Please try again!';
+      }
+      chat.scrollTop = chat.scrollHeight;
+    }
+  </script>
+</body>
+</html>
